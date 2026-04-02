@@ -128,11 +128,30 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# --- MDM / motion-diffusion-model local data & outputs ---
+# Checkpoints, logs, and everything under save/ (includes args.json next to .pt, sample folders, MP4s)
 save/
-wandb/
+
+# HumanML3D / KIT copies (captions, motions, Mean.npy — huge). Keep dataset/humanml_opt.txt, kit_opt.txt, README.md.
+dataset/HumanML3D/
+dataset/KIT-ML/
+
+# T2M evaluator unpack dirs (download_t2m_evaluators)
 t2m/
+kit/
+
+# SMPL / GloVe / downloaded assets
 body_models/
 glove/
+
+# Sample.generate / sample.edit outputs if ever placed outside save/
+**/samples_*seed*/
+**/results.npy
+**/results.txt
+**/results_len.txt
+*.mp4
+
+wandb/
 slurm**/
 *.out
 *.err

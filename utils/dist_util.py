@@ -2,6 +2,7 @@
 Helpers for distributed training.
 """
 
+import os
 import socket
 
 import torch as th
@@ -20,7 +21,11 @@ def setup_dist(device=0):
     Setup a distributed process group.
     """
     global used_device
-    used_device = device
+    # Windows / broken CUDA: first .to("cuda") can hang. Run with MDM_FORCE_CPU=1 to stay on CPU.
+    if os.environ.get("MDM_FORCE_CPU", "").strip().lower() in ("1", "true", "yes"):
+        used_device = -1
+    else:
+        used_device = device
     if dist.is_initialized():
         return
     # os.environ["CUDA_VISIBLE_DEVICES"] = str(device) # f"{MPI.COMM_WORLD.Get_rank() % GPUS_PER_NODE}"

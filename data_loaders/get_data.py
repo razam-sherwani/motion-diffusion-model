@@ -1,3 +1,4 @@
+import sys
 from torch.utils.data import DataLoader
 from data_loaders.tensors import collate as all_collate
 from data_loaders.tensors import t2m_collate, t2m_prefix_collate
@@ -51,9 +52,11 @@ def get_dataset_loader(name, batch_size, num_frames, split='train', hml_mode='tr
     
     collate = get_collate_fn(name, hml_mode, pred_len, batch_size)
 
+    # Windows uses "spawn" for workers; num_workers > 0 often hangs on first batch.
+    num_workers = 0 if sys.platform == 'win32' else 8
     loader = DataLoader(
         dataset, batch_size=batch_size, shuffle=True,
-        num_workers=8, drop_last=True, collate_fn=collate
+        num_workers=num_workers, drop_last=True, collate_fn=collate
     )
 
     return loader

@@ -5,6 +5,7 @@ numpy array. This can be used to produce samples for FID evaluation.
 """
 from utils.fixseed import fixseed
 import os
+import sys
 import numpy as np
 import torch
 from utils.parser_util import edit_args
@@ -22,6 +23,8 @@ import shutil
 
 def main():
     args = edit_args()
+    if sys.platform == 'win32':
+        os.environ.setdefault('KMP_DUPLICATE_LIB_OK', 'TRUE')
     fixseed(args.seed)
     out_path = args.output_dir
     name = os.path.basename(os.path.dirname(args.model_path))

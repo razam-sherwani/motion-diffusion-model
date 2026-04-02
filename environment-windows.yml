@@ -1,0 +1,52 @@
+# Windows-friendly env spec (no Linux-only pins from `conda env export`).
+# Use: conda env create -f environment-windows.yml
+#
+# If `import torch` or `python -m spacy download` fails with OSError / WinError 182 on a GPU DLL,
+# reinstall PyTorch from pip wheels: prepare\windows_reinstall_pytorch_cu110.ps1
+# Then install the spaCy model without the CLI: prepare\windows_install_en_core_web_sm.ps1
+name: mdm
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.7
+  - pip
+  - cudatoolkit=11.0
+  - pytorch=1.7.1
+  - torchvision=0.8.2
+  - torchaudio=0.7.2
+  - numpy>=1.21,<1.22
+  - scipy>=1.7,<1.8
+  - matplotlib>=3.1,<3.2
+  - h5py
+  - pillow
+  - scikit-learn>=1.0,<1.1
+  - spacy=3.3.1
+  - trimesh>=3.15,<4
+  - tqdm
+  - requests
+  - gdown
+  - ninja
+  - wandb>=0.15,<0.16
+  - pip:
+    # Py3.7: avoid transformers 4.30+ (pulls safetensors sdist; build breaks on Win). 4.21 works with DistilBERT.
+    - transformers==4.21.3
+    - blis==0.7.8
+    - chumpy==0.70
+    - click==8.1.3
+    - confection==0.0.2
+    - ftfy==6.1.1
+    - importlib-metadata==5.0.0
+    - lxml==4.9.1
+    - murmurhash==1.0.8
+    - preshed==3.0.7
+    - pycryptodomex==3.15.0
+    - regex==2022.9.13
+    - smplx==0.1.28
+    - srsly==2.4.4
+    - thinc==8.0.17
+    - typing-extensions==4.1.1
+    - urllib3==1.26.12
+    - wasabi==0.10.1
+    - wcwidth==0.2.5

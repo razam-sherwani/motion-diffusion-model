@@ -771,6 +771,13 @@ class HumanML3D(data.Dataset):
         opt.data_root = pjoin(abs_base_path, opt.data_root)
         opt.save_root = pjoin(abs_base_path, opt.save_root)
         opt.meta_dir = pjoin(abs_base_path, './dataset')
+        # Many users copy `HumanML3D/HumanML3D/` into `./dataset/HumanML3D`, so texts live in
+        # `./dataset/HumanML3D/HumanML3D/texts` instead of `./dataset/HumanML3D/texts`.
+        nested = pjoin(opt.data_root, 'HumanML3D')
+        if not os.path.isdir(opt.text_dir) and os.path.isdir(pjoin(nested, 'texts')):
+            opt.text_dir = pjoin(nested, 'texts')
+            opt.motion_dir = pjoin(nested, 'new_joint_vecs')
+            print('Using nested HumanML3D paths: %s' % opt.text_dir, flush=True)
         opt.use_cache = kwargs.get('use_cache', True)
         opt.fixed_len = kwargs.get('fixed_len', 0)
         if opt.fixed_len > 0:
@@ -797,19 +804,26 @@ class HumanML3D(data.Dataset):
 
         self.split_file = pjoin(opt.data_root, f'{split}.txt')
         if mode == 'text_only':
+            print("Indexing HumanML3D text captions (text_only)...", flush=True)
             self.t2m_dataset = TextOnlyDataset(self.opt, self.mean, self.std, self.split_file)
         else:
             self.w_vectorizer = WordVectorizer(pjoin(opt.cache_dir, 'glove'), 'our_vab')
             self.t2m_dataset = Text2MotionDatasetV2(self.opt, self.mean, self.std, self.split_file, self.w_vectorizer)
             self.num_actions = 1 # dummy placeholder
 
+        print(f"Moving mean/std tensors to {device} (first CUDA use can take a while on some GPUs)...", flush=True)
         self.mean_gpu = torch.tensor(self.mean).to(device)[None, :, None, None]
         self.std_gpu = torch.tensor(self.std).to(device)[None, :, None, None]
+        print("HumanML3D wrapper ready.", flush=True)
 
-        assert len(self.t2m_dataset) > 1, 'You loaded an empty dataset, ' \
-                                          'it is probably because your data dir has only texts and no motions.\n' \
-                                          'To train and evaluate MDM you should get the FULL data as described ' \
-                                          'in the README file.'
+        assert len(self.t2m_dataset) > 1, (
+            'You loaded an empty HumanML3D text dataset.\n'
+            'Common causes: (1) captions are under dataset/HumanML3D/HumanML3D/texts but paths pointed elsewhere; '
+            '(2) test.txt IDs have no matching .txt files in text_dir.\n'
+            'Expected caption folder (after fix-up): %s\n'
+            'See README HumanML3D setup: copy inner HumanML3D folder so texts live in dataset/HumanML3D/texts.'
+            % getattr(opt, 'text_dir', '')
+        )
 
     def __getitem__(self, item):
         return self.t2m_dataset.__getitem__(item)

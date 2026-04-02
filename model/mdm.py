@@ -3,6 +3,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import clip
+if not hasattr(clip, 'load'):
+    raise ImportError(
+        'Wrong PyPI package named "clip" is installed (it has no clip.load). '
+        'Remove it and install OpenAI CLIP: '
+        'pip uninstall -y clip && pip install git+https://github.com/openai/CLIP.git'
+    )
 from model.rotation2xyz import Rotation2xyz
 from model.BERT.BERT_encoder import load_bert
 from utils.misc import WeightedSum
@@ -115,8 +121,8 @@ class MDM(nn.Module):
                     assert self.arch == 'trans_dec'
                     # assert self.emb_trans_dec == False # passing just the time embed so it's fine
                     print("Loading BERT...")
-                    # bert_model_path = 'model/BERT/distilbert-base-uncased'
-                    bert_model_path = 'distilbert/distilbert-base-uncased'
+                    # Hub id (needs network once, then cached). Avoid broken relative Hub URLs from odd HF_ENDPOINT.
+                    bert_model_path = 'distilbert-base-uncased'
                     self.clip_model = load_bert(bert_model_path)  # Sorry for that, the naming is for backward compatibility
                     self.encode_text = self.bert_encode_text
                     self.clip_dim = 768

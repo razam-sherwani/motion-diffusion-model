@@ -1,6 +1,15 @@
 import torch.nn as nn
 import os
 
+
+def _ensure_huggingface_hub_base():
+    """Empty or scheme-less HF_ENDPOINT breaks Hub URLs (MissingSchema on /api/...)."""
+    for key in ("HF_ENDPOINT", "HUGGINGFACE_HUB_URL"):
+        v = os.environ.get(key)
+        if v is not None and (not str(v).strip() or not str(v).strip().lower().startswith("http")):
+            os.environ.pop(key, None)
+
+
 def load_bert(model_path):
     bert = BERT(model_path)
     bert.eval()
@@ -13,12 +22,11 @@ class BERT(nn.Module):
     def __init__(self, modelpath: str):
         super().__init__()
 
+        _ensure_huggingface_hub_base()
         from transformers import AutoTokenizer, AutoModel
         from transformers import logging
         logging.set_verbosity_error()
-        # Tokenizer
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
-        # Tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(modelpath)
         # Text model
         self.text_model = AutoModel.from_pretrained(modelpath)

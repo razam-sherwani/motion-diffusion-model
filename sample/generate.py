@@ -5,6 +5,7 @@ numpy array. This can be used to produce samples for FID evaluation.
 """
 from utils.fixseed import fixseed
 import os
+import sys
 import numpy as np
 import torch
 from utils.parser_util import generate_args
@@ -24,6 +25,9 @@ def main(args=None):
     if args is None:
         # args is None unless this method is called from another function (e.g. during training)
         args = generate_args()
+    # PyTorch/MKL + matplotlib/moviepy often pull two OpenMP runtimes on Windows; aborts MP4 export without this.
+    if sys.platform == 'win32':
+        os.environ.setdefault('KMP_DUPLICATE_LIB_OK', 'TRUE')
     fixseed(args.seed)
     out_path = args.output_dir
     n_joints = 22 if args.dataset == 'humanml' else 21
@@ -75,11 +79,11 @@ def main(args=None):
 
     args.batch_size = args.num_samples  # Sampling a single batch from the testset, with exactly args.num_samples
 
-    print('Loading dataset...')
+    print('Loading dataset...', flush=True)
     data = load_dataset(args, max_frames, n_frames)
     total_num_samples = args.num_samples * args.num_repetitions
 
-    print("Creating model and diffusion...")
+    print("Creating model and diffusion...", flush=True)
     model, diffusion = create_model_and_diffusion(args, data)
 
     sample_fn = diffusion.p_sample_loop
@@ -87,7 +91,7 @@ def main(args=None):
         sample_cls = AutoRegressiveSampler(args, sample_fn, n_frames)
         sample_fn = sample_cls.sample
 
-    print(f"Loading checkpoints from [{args.model_path}]...")
+    print(f"Loading checkpoints from [{args.model_path}]...", flush=True)
     load_saved_model(model, args.model_path, use_avg=args.use_ema)
 
     if args.guidance_param != 1:
